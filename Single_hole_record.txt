@@ -1,0 +1,64 @@
+MacroName SingleHoleRecord
+###################################
+#
+# This macro should be used during screening
+# It allows to simulate data acquisition conditions for a single hole
+# including ice thickness measurements
+#
+# STATUS: functional
+#
+# M.Fislage & R. Efremov Jan 2020
+#
+# Credits to J. Brink, Chen Xu, Hening Stahlberg, Wim Hagen and David Mastronarde
+# 
+###################################
+
+# Defocus Value
+DEFOC = -2.5
+ # Number of shorts and offset
+NShots = 4
+
+RAD = 0.5 # offset from center in microns
+# Ice thickness measurement 1- yes 0 - no 
+# It is measured on the last shot of multishots
+ICE_THICKNESS = 1
+
+# FOCUS
+      GoToLowDoseArea F
+       SetTargetDefocus $DEFOC
+      AutoFocus 
+
+# CENTER BEAM (can be commented out)
+      #GoToLowDoseArea T 
+      #Trial
+       #CenterBeamFromImage T
+
+# TAKE IMAGES
+     GoToLowDoseArea R
+     loop $NShots icount
+            IS_ANGLE = ( $icount - 1 ) * 360 / $NShots + 90
+            IS_X = $RAD * sin ( $IS_ANGLE)
+            IS_Y = $RAD * cos ( $IS_ANGLE)
+            echo Taken image at angle $IS_ANGLE : X = $IS_X , Y = $IS_Y
+             ImageShiftByMicrons $IS_X $IS_Y
+             Delay 3 sec
+             Record
+             if  (   $ICE_THICKNESS  == 1 ) and ( $icount == $NShots )
+                        ReportMeanCounts
+                        I_FILT_IN = $reportedValue1
+                        SetLowDoseMode 0
+                        SetSlitIn 0
+                        Record
+                        #Save
+                        ReportMeanCounts
+                        I_FILT_OUT = $reportedValue1
+                       THICKNESS = 400 * log ( $I_FILT_OUT / $I_FILT_IN )
+                        echo ICE THICKNESS is $THICKNESS nm
+                        SetSlitIn 1
+                        SetLowDoseMode 1
+                        GoToLowDoseArea R
+                        endif  
+              ISR_X = -1.0 *  $IS_X
+              ISR_Y =  -1.0 * $IS_Y
+              ImageShiftByMicrons $ISR_X  $ISR_Y  
+         endloop
