@@ -1,0 +1,59 @@
+MacroName Parameters
+###################################
+#
+# Script to include all the parameters used in all the scrpts
+# It should be called in the beginning of any main script.
+#
+# M.Fislage & R. Efremov Jan 2020
+# Credits to J. Brink, Chen Xu and David Mastronarde
+#
+# STATUS: functional
+#
+###################################
+
+# Define focus parameters in microns
+
+TD_low = -2.5		# defocus limit low
+TD_high = -4		# defocus limit high
+step = 0.2		# defocus step interval	
+FocusDistance = 5   	# distance between acquisition positions used for physical focusing in microns
+
+# Define multi shot parameters used in SPA
+
+shottype = 1		# 0 for "old type", 1 to use this scipts input, 2 use SerialEM navigator box info
+shots = 4 		# no of shots around the center
+center = 0  		#-1 first shot in center, 1 last shot in center, 0 no center shot (not available for shottype=0)
+offset = 0.55		# offset from center in microns
+msdelay = 0 		# extra delay between multishot images in seconds
+earlyreturn = 0 	# 0 no early return, 1 early return after last shot, 2 early return after all shots
+earlyold = -1 		# 0 to return without any summed image, or -1 to return with the full sum (use if shottype= 0)
+earlyframes = 0 	# number of frames in the early returned image (or -1 for all, 0 for none) (not available for shottype=0)
+multihole = 1  		# 1 to do shots around a center (within a hole), 2 to do shots in multiple holes (not available for shottype=0)
+
+# Frequency of beam focusing in minutes  
+
+BeamCentTimeInterval = 1  # Frequency of Beam Centering in minutes
+
+# Ice thickness frequency
+
+I_EMPTY = 1100		# beam count of empty area
+ICE_FREQ = 1		# frequency of ice measurement with filter slit (counted in holes)
+
+# Interval in hours for flashing the CFEG
+FlashInterval = 4.5
+
+# Interval to prepare HW Dark Reference
+DarkRefInterval = 3
+
+# Additonal delay for stage stabilization before image acquisition
+
+STAGE_STAB_TIME = 10
+
+# HiResShot delay parameters
+
+wait_time = 3
+
+# send emails for low intensity images
+
+IntensityThreshold = 15      	# threshold for image to be considered low Intensity
+NoLowCountImages = 5    	# No of low intensity images +1 that will trigger a warning email
