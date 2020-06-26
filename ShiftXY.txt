@@ -1,0 +1,27 @@
+MacroName ShiftXY
+###################################
+#
+# Script to align pivot points
+#
+# R. Efremov Jan 2020
+#   
+# STATUS: functional
+#
+###################################
+
+# The script is used at eucentric height, high bright field magnification (e.g. 60k), and strong underfocus (e.g. -40 um)
+# In our hands this is more accurate than using shift wobblers in diffraction mode
+
+amp_X = 30  # use amp_x while adjusting CL comp shift X
+amp_Y = 0   # use amp_y while adjusting CL comp shift y
+
+ReportBeamShift
+sh_X =  $reportedValue1
+sh_Y =  $reportedValue2
+loop 100 icount
+Delay 0.5 sec
+SetBeamShift  $sh_X + $amp_X  $sh_Y + $amp_Y
+Delay 0.5 sec
+SetBeamShift  $sh_X - $amp_X  $sh_Y - $amp_Y
+echo $icount
+ endloop
