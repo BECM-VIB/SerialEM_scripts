@@ -1,0 +1,57 @@
+MacroName MakeGridAtlas
+###################################
+#
+# Script to collect a grid atlas
+#
+# M.Fislage & R. Efremov Jan 2020
+#   
+# STATUS: functional
+#
+###################################
+
+# Make a 50x LowMag Grid Atlas of a grid already in the microscope
+# SerialEM needs to be in MDS mode before calling the script
+# It can happen that SerialEM overwrites your set parameters for the atlas (i.e. binning and exposure time).
+# In this case it helps to open an older atlas file that was collected with the desired parameters, before running this script.
+
+# Ensure that tanks are not refilling
+CallFunction MyFunctions::WaitForRefillingJ
+
+#Controls if a navigator file is open
+ReportIfNavOpen 
+if $reportedValue1 == 0
+   Pause 'Navigator File Must be open. Do NOT proceed!!! Open navigator file and rerun the script.'
+endif
+
+#Prepare LowMagMode
+GoToLowDoseArea R
+RemoveAperture 0
+SetLowDoseMode 0
+Delay 2 sec
+SetBeamBlank 1
+SetMag 50
+SetPercentC2 100
+SetEucentricFocus 
+SetSlitIn 0
+ScreenUp 
+
+#defines file name and directory for new GridMap
+UserSetDirectory
+ChooserForNewFile 0 Atlas
+OpenNewMontage 9 9 $Atlas
+
+#Performs Montage
+MoveStageTo -100 -40 # Use this parameter if your grid is not exactly centred at 0,0
+SetColumnOrGunValve 1
+SetBeamBlank 0
+M
+NewMap
+
+#Return to LowDoseMode
+#SetSlitIn 1
+SetMag 60000
+SetLowDoseMode 1
+GoToLowDoseArea R
+ReInsertAperture 0
+CloseFile 
+SaveNavigator
