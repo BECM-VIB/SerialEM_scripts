@@ -1,0 +1,165 @@
+MacroName CollectSPAturbo
+###################################
+#
+# Script to acquire SPA data
+#
+# M.Fislage & R. Efremov Jul 2020
+#   
+# STATUS: functional
+#
+###################################
+
+Call Parameters
+SuppressReports
+
+# Check if gun to be flashed, HWDark Refrence to be made and dewars to be filled or being filled
+CallFunction MyFunctions::WaitForRefillingJ
+LongOperation FF $FlashInterval
+UpdateHWDarkRef $DarkRefInterval
+
+# SET LOCAL TIMER
+
+IsVariableDefined NN
+if  $reportedValue1 == 1
+   NN := $NN + 1
+   echo Here is NN $NN
+else
+   NN := 1
+  echo Created NN $NN
+endif
+
+#Define counter for low intensity images
+IsVariableDefined LowCount
+if  $reportedValue1 == 0
+   LowCount := 0
+endif
+
+
+# Realign to Item with special considerations for cryoARM beam sizes
+GoToLowDoseArea V
+# realign with accuracy of 1.5 um, trying 2 iterations to fit the stage and leave IS for the best fit
+#ForceCenterRealign # uncomment if alignmnet is poor
+ResetClock
+RealignToNavItem 1 0 1.5 2 0
+RelaxStage 0.025
+Delay $STAGE_STAB_TIME sec
+
+# CHECK  CENTER BEAM TIMER
+IsVariableDefined BeamCenterTimeOld
+if $reportedValue1 == 0
+     BeamCenterTimeOld := 0
+endif
+ReportMinuteTime BeamCenterTime
+     if ( $BeamCenterTime - $BeamCenterTimeOld ) > $BeamCentTimeInterval
+        CENTER_FLAG = 1
+      else
+        CENTER_FLAG = 0
+     endif
+ReportClock
+echo TIME: time for hole centering $reportedValue1 sec.
+ResetClock
+
+# FOCUS
+# check position of previous focus
+ReportStageXYZ
+stX = $reportedValue1
+stY = $reportedValue2
+IsVariableDefined FocX
+if  $reportedValue1 == 0          # no focusing has been done yet 
+      FocX := $stX
+      FocY := $stY
+      DoFoc = 1
+else
+      distF =  SQRT ( POWER ( (  $stX -  $FocX ) 2 ) + POWER ( ( $stY -  $FocY ) 2 ) )
+      echo Distance from the last focus position is $distF
+      if   $distF > $FocusDistance
+            FocX := $stX
+            FocY := $stY
+            DoFoc = 1
+      else
+            DoFoc = 0
+      endif
+endif
+
+# Focus or set focus value only
+CallFunction MyFunctions::CycleDefocusTarget
+if  $DoFoc == 1
+      GoToLowDoseArea F
+      FocusChangeLimits  -50 50
+      AutoFocus 
+      # check if autofocus worked - can not retrive CCC value from Autofocus data
+      ReportAutofocus
+      FocusError = $reportedValue2
+      ReportMeanCounts
+      FocusCounts =  $reportedValue1
+      if (  $FocusError != 0 ) or ( $FocusCounts < 200 )
+         echo WARNING: FOCUS LIKELY FAILED: FocusError $FocusError and FocusCounts  $FocusCounts
+         echo RESET DEFOCUS TO 0
+         SetDefocus 0
+         FocX :=
+      endif                
+      # check if focus is not too far from absolute focus, if so, moves Z height to be close to absolute focus
+      # Current cutoff  5um and the offset is calculated  relative to -1 um defocus
+      ReportDefocus
+      CurDef := $reportedValue1
+      ReportTargetDefocus
+      OldTarDef := $reportedValue1
+      RelDef = -1
+      StShift = $CurDef - $RelDef
+      if ( ABS $StShift ) > 5.0
+            if ( ABS $StShift ) < 50.0
+                   echo WARNING: LARGE DEFOCUS  GRID IS LIKELY BENT moving Z  stage by $StShift
+                   MoveStage 0 0 $StShift
+                   UpdateGroupZ
+                   Delay 10 sec # stage settling
+                   RealignToNavItem 1 0 0.5 1 0
+                   Autofocus
+                   ReportDefocus
+                   CurDef := $reportedValue1
+            else
+                   echo WARNING:THE FOCUSING LIKELY FAILED - DO NOT MOVE THE STAGE Z HEIGHT, SET FOC 0 and FORCE FOCUSING NEXT HOLE
+                   SetDefocus 0
+                   FocX :=
+            endif              
+      endif
+ else
+     if  $CENTER_FLAG == 1
+            GoToLowDoseArea T 
+     else
+            GoToLowDoseArea R
+     endif
+     ReportTargetDefocus
+     NewDef = $CurDef - $OldTarDef + $reportedValue1
+     echo Do not do focusing set defocus to $NewDef 
+     SetDefocus  $NewDef
+endif
+
+ReportClock
+echo TIME: time for FOCUSING $reportedValue1 sec.
+ResetClock
+
+# CENTER BEAM 
+     if  $CENTER_FLAG == 1
+              echo Centering beam ...
+              CallFunction MyFunctions::CenterBeam Beam
+              ReportMinuteTime BeamCenterTimeOld
+              ReportBeamShift    
+              echo NEW BEAM POSITION $reportedValue1 $reportedValue2
+           endif
+
+# Take the shot
+
+ReportClock
+echo TIME: time for BEAM CENTERING $reportedValue1 sec.
+ResetClock
+
+
+ReportLowDose
+if $reportedValue2 != 3 
+	GoToLowDoseArea R
+endif
+
+CallFunction MyFunctions::MultiShot
+CallFunction MyFunctions::Nobeam   ###Test email for lost beam
+ReportClock
+echo TIME: time for IMAGE RECORDING $reportedValue1 sec.
