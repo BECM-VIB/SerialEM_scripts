@@ -1,0 +1,68 @@
+MacroName HolePatternDirections
+
+###################################
+#
+# Script to define the hole pattern for multihole SPA using the SPA turbo script
+#
+# R. Efremov & M.Fislage Jul 2020
+#   
+# STATUS: functional
+#
+###################################
+
+#ResetClock
+#ImageShiftByMicrons 0 5 0 0
+#ReportClock
+#echo TIME: $reportedValue1 sec.
+#ResetClock
+#ImageShiftByMicrons 0 -5 0 0
+#ReportClock
+#echo TIME: $reportedValue1 sec.
+
+GoToLowDoseArea R
+OKBox 1) Lower the screen 2) Remove CL 3) Open EF slit
+  
+OKBox Center stage on a hole using stage shift and/or  IS
+
+ReportImageShift
+shift0_x = $reportedValue1
+shift0_y = $reportedValue2
+echo ---------------START PROCEDURE TO DEFINE VECTORS ------------
+echo Starting values $shift0_x  $shift0_y 
+
+OKBox Center on nearest hole using IS
+ReportImageShift
+shift1_x = $reportedValue1
+shift1_y = $reportedValue2
+VECTOR1 = { ($shift1_x - $shift0_x)  ($shift1_y - $shift0_y)  }
+
+echo VECTOR1 $VECTOR1
+SetImageShift -1 * $VECTOR1[2] + $shift0_x $VECTOR1[1] + $shift0_y
+OKBox Roughly centered on perpenducilar hole. Center carefully with IS and press ok.  
+ReportImageShift
+shift2_x = $reportedValue1
+shift2_y = $reportedValue2
+VECTOR2 = { ($shift2_x - $shift0_x)  ($shift2_y - $shift0_y)  }
+echo VECTOR2 $VECTOR2
+
+EnterDefaultedNumber 3 -1 ENTER NUMBER OF HOLES TO SHIFT FOR FINE ADJUSTMENT
+Nholes = $reportedValue1
+
+SetImageShift $VECTOR1[1] * $Nholes + $shift0_x $VECTOR1[2] * $Nholes + $shift0_y
+OKBox ADJUST CENTER USING IS and press OK
+
+ReportImageShift
+shift1_x = $reportedValue1
+shift1_y = $reportedValue2
+VECTOR1 = { ( ($shift1_x - $shift0_x) / $Nholes )  ( ($shift1_y - $shift0_y) / $Nholes ) }
+echo REFINED VECTOR1 $VECTOR1
+
+SetImageShift $VECTOR2[1] * $Nholes + $shift0_x $VECTOR2[2] * $Nholes + $shift0_y
+OKBox ADJUST CENTER USING IS and press OK
+
+ReportImageShift
+shift2_x = $reportedValue1
+shift2_y = $reportedValue2
+VECTOR2 = { ( ($shift2_x - $shift0_x) / $Nholes )  ( ($shift2_y - $shift0_y) / $Nholes) }
+echo REFINED VECTOR2 $VECTOR2
+SetImageShift  0 0 
