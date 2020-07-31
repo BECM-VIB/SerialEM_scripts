@@ -5,7 +5,7 @@ MacroName MyFunctions
 #
 # STATUS: functional
 #
-# M.Fislage & R. Efremov Jan 2020
+# M.Fislage & R. Efremov Jul 2020
 #
 # Credits to J. Brink, Chen Xu, Hening Stahlberg, Wim Hagen and David Mastronarde
 # 
@@ -107,17 +107,44 @@ Call Parameters
 
 if $shottype == 0
 IS_RAD = $offset
-loop $shots
-   IS_ANGLE = ( $shots - 1 ) * 360 / $shots + 90
-   IS_X = $IS_RAD * sin ( $IS_ANGLE)
-   IS_Y = $IS_RAD * cos ( $IS_ANGLE)
-   echo Taken image at angle $IS_ANGLE : X = $IS_X , Y = $IS_Y
-   ImageShiftByMicrons $IS_X $IS_Y
-   Delay $wait_time
-   #EarlyReturnNextShot $earlyold
-   R  
-  endloop
+ReportImageShift
+X0 = $reportedValue1
+Y0 = $reportedValue2
+ReportBeamTilt
+tilt_x0 = $reportedValue1
+tilt_y0 = $reportedValue2
+
+ReportObjectiveStigmator
+stig_x0 = $reportedValue1
+stig_y0 = $reportedValue2
+
+
+loop $#hole_coord_x hcount
+   loop $shots  icount  
+      IS_ANGLE = ( $icount - 1 ) * 360 / $shots
+      IS_X = $IS_RAD * cos ( $IS_ANGLE)
+      IS_Y = $IS_RAD * sin ( $IS_ANGLE)
+      # calculating IS
+      shift_X = $hole_coord_x[$hcount] * $VECTOR1[1] + $hole_coord_y[$hcount] * $VECTOR2[1] + $IS_X * $IS_shift_x_micron[1] + $IS_Y * $IS_shift_y_micron[1] + $X0
+      shift_Y = $hole_coord_x[$hcount] * $VECTOR1[2] + $hole_coord_y[$hcount] * $VECTOR2[2] + $IS_X * $IS_shift_x_micron[2] + $IS_Y * $IS_shift_y_micron[2] + $Y0
+      # calculating coma TILT compensation
+      tilt_x = $shift_X * $ComaISmatrix[1] + $shift_Y * $ComaISmatrix[2] 
+      tilt_y = $shift_X * $ComaISmatrix[3] + $shift_Y * $ComaISmatrix[4]
+      # calculating STIG tilt compensation
+      stig_x = $shift_X * $ComaSTIGmatrix[1] + $shift_Y * $ComaSTIGmatrix[2] 
+      stig_y = $shift_X * $ComaSTIGmatrix[3] + $shift_Y * $ComaSTIGmatrix[4]
+      echo Take image at hole $hcount  angle $IS_ANGLE 
+    
+      SetImageShift  $shift_X $shift_Y 
+      SetBeamTilt ( $tilt_x + $tilt_x0 ) ( $tilt_y + $tilt_y0 )
+      SetObjectiveStigmator ( $stig_x + $stig_x0 )  ( $stig_y + $stig_y0 )  
+      Delay $msdelay
+      #EarlyReturnNextShot $earlyold
+      R  
+    endloop
+endloop
 endif
+
 if $shottype == 1  
    Delay $wait_time 
    MultipleRecords $shots $center $offset $msdelay 0 $earlyreturn $earlyframes $multihole
