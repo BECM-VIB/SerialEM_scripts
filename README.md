@@ -5,7 +5,7 @@ Detailed explanations are noted at the top or within the script at the specific 
 
 **Parameters.txt**
 This file contains all variable parameters that you might want to change depending on your data collection.
-v. Jul 2020 allows also multi-hole recoding. Choose option 0 and obtain the jole pattern from the separate script. IS and Astigmatism matrices neeed to be obtained from the IS-vs-Coma calibration in SerialEM.
+version Jul 2020 allows also multi-hole recoding. Choose option 0 and obtain the hole pattern from the separate script. IS and Astigmatism matrices neeed to be obtained from the IS-vs-Coma calibration in SerialEM.
 
 **Functions.txt**
 This file contains functions that can be (are) called from other scripts in this repository.
