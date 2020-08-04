@@ -5,6 +5,7 @@ Detailed explanations are noted at the top or within the script at the specific 
 
 **Parameters.txt**
 This file contains all variable parameters that you might want to change depending on your data collection.
+v. Jul 2020 allows also multi-hole recoding. Choose option 0 and obtain the jole pattern from the separate script. IS and Astigmatism matrices neeed to be obtained from the IS-vs-Coma calibration in SerialEM.
 
 **Functions.txt**
 This file contains functions that can be (are) called from other scripts in this repository.
@@ -20,3 +21,9 @@ This scripts can be used during the screening stage of you data collection. It a
 
 **SPA.txt**
 This script is called for automated data collection in single particle cryoEM.
+
+**SPA-turbo.txt**
+This script is called for automated data collection in single particle cryoEM allowing for multi-hole recordings. Select in the Parameters text option 0.
+
+**HolePatternDirections.txt**
+This script is used to determine the direction and distance of the holes for multi-hole recordings. The result of this script needs to be copied/changed in the parameter.txt file
