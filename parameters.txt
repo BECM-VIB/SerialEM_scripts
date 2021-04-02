@@ -1,10 +1,13 @@
 MacroName Parameters
-###################################
+##################################
 #
 # Script to include all the parameters used in all the scripts
 # It should be called in the beginning of any main script.
+# It should be used with the new versions of Function script and SPA and allows for fast multiple collection
+# Vector 1 and Vector 2 can be obtained by running the new script hole pattern
+# ComaIS and ComaStig matrices, used for coma and stig correction of multiple can be obtained within SerialEM through the ComavsIS calibration
 #
-# M.Fislage & R. Efremov Jul 2020
+# M.Fislage & R. Efremov Jan 2021
 # Credits to J. Brink, Chen Xu and David Mastronarde
 #
 # STATUS: functional
@@ -13,47 +16,54 @@ MacroName Parameters
 
 # Define focus parameters in microns
 
-TD_low = -2.5		# defocus limit low
-TD_high = -4		# defocus limit high
-step = 0.2		# defocus step interval	
-FocusDistance = 5   	# distance between acquisition positions used for physical focusing in microns
+TD_low = -0.8		# defocus limit low
+TD_high = -1.6		# defocus limit high
+step = 0.2                                    # defocus step interval	
+FocusDistance = 1   	# distance between acquisition positions used for physical focusing in microns
 
 # Define multi shot parameters used in SPA
 
-shottype = 1		# 0 for "multihole turbo setup", 1 to use this scipts input, 2 use SerialEM navigator box info
-shots = 4 		# no of shots around the center
-center = 0  		#-1 first shot in center, 1 last shot in center, 0 no center shot (not available for shottype=0)
-offset = 0.55		# offset from center in microns
+shots = 5  	# no of shots around the center
+center = 0		#-1 first shot in center, 1 last shot in center, 0 no center shot (not available for shottype=0)
+offset = 0.67		# offset from center in microns
 msdelay = 0 		# extra delay between multishot images in seconds
-earlyreturn = 0 	# 0 no early return, 1 early return after last shot, 2 early return after all shots
-earlyold = -1 		# 0 to return without any summed image, or -1 to return with the full sum (use if shottype= 0)
-earlyframes = 0 	# number of frames in the early returned image (or -1 for all, 0 for none) (not available for shottype=0)
-multihole = 1  		# 1 to do shots around a center (within a hole), 2 to do shots in multiple holes (not available for shottype=0)
 
-# fast multishole parameters
-# 3x3 pattern with 0.0 in the middle
-hole_coord_x = { -1 0 1 -1 0 1 -1 0 1 }
-hole_coord_y = { 1 1 1 0 0 0 -1 -1 -1 }
+wait_time = 0   # delay in sec before each new image is recorded
 
-# 2x2 + 1 pattern with 0.0 in the middle
-# hole_coord_x = { 0 1 0 0 -1 }
-# hole_coord_y = { -1 0 0 1 0  }
+#hole pattern parameters
+
+#single hole
+#hole_coord_x = { 0 }
+#hole_coord_y = { 0 }
 
 # 2x2 pattern with 0.0 in the middle in between all the holes
-#hole_coord_x = { -0.5 0.5 0.5 -0.5 }
-#hole_coord_y = { -0.5 -0.5 0.5 0.5 }
+hole_coord_x = { -0.5 0.5 0.5 -0.5 }
+hole_coord_y = { -0.5 -0.5 0.5 0.5 }
 
-#G VECTORS FOR grid1485
-VECTOR1  = { 7.24408  -7.025013 }
-VECTOR2 = { 8.02132  6.20186 }
+# 3x1 pattern with 0.0 in the middle in between all the holes
+#hole_coord_x = { -1 0 1 }
+#hole_coord_y = { 0 0 0 }
 
 
-ComaISmatrix = { -0.020968  0.066437  -0.073700  -0.024878 }
+# 2x2 + 1 pattern with 0.0 in the middle
+#hole_coord_x = { 0 1 0 0 -1 }
+#hole_coord_y = { -1 0 0 1 0  }
 
-ComaSTIGmatrix = { 0.000970  -0.000455  -0.001145  -0.001271 }
+# 3x3 pattern with 0.0 in the middle
+#hole_coord_x = { -1 0 1 -1 0 1 -1 0 1 }
+#hole_coord_y = { 1 1 1 0 0 0 -1 -1 -1 }
 
-IS_shift_x_micron = { 3.091 -1.279 }
-IS_shift_y_micron = { -1.425 -2.693 }
+# 5x5 pattern with 0.0 in the middle
+#hole_coord_x = { -2 -2 -2 -2 -2 -1 -1 -1 -1 -1 0 0 0 0 1 1 1 1 1 2 2 2 2 2 0 }
+#hole_coord_y = { -2 -1 0 1 2 -2 -1 0 1 2 -2 -1 1 2 -2 -1 0 1 2 -2 -1 0 1 2 0 }
+
+#G VECTORS ID2800
+VECTOR1 = {4.248573  8.643833}
+VECTOR2 = {-9.88568  3.596413}
+
+ComaISmatrix = {-0.068739  0.060608  -0.056379  -0.078368 }
+ComaSTIGmatrix = {0.000729  -0.000301  -0.001173  -0.001173}
+
 
 # Frequency of beam focusing in minutes  
 
@@ -61,8 +71,8 @@ BeamCentTimeInterval = 1  # Frequency of Beam Centering in minutes
 
 # Ice thickness frequency
 
-I_EMPTY = 1100		# beam count of empty area
-ICE_FREQ = 1		# frequency of ice measurement with filter slit (counted in holes)
+I_EMPTY = 950		# beam count of empty area
+ICE_FREQ = 10		# frequency of ice measurement with filter slit (counted in holes)
 
 # Interval in hours for flashing the CFEG
 FlashInterval = 4.5
@@ -74,11 +84,12 @@ DarkRefInterval = 3
 
 STAGE_STAB_TIME = 5
 
-# HiResShot delay parameters
-
-wait_time = 3
-
 # send emails for low intensity images
 
 IntensityThreshold = 15      	# threshold for image to be considered low Intensity
 NoLowCountImages = 5    	# No of low intensity images +1 that will trigger a warning email
+debug_tur = 0                                # 1 - output additonal information, 0 - no output
+
+#DO NOT TOUCH THESE VALUES
+IS_shift_x_micron = {3.252 -1.332 }
+IS_shift_y_micron = {-1.425 -2.693}
