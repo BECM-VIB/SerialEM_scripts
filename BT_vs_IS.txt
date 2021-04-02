@@ -1,0 +1,129 @@
+ScriptName BTvsIS
+
+###################################
+#
+# Script to acquire SPA data
+#
+# R. Efremov & M.Fislage Jan 2021
+#
+# Script modified version of https://sphinx-emdocs.readthedocs.io/en/latest/serialEM-note-tackle-coma.html
+#The goal is to measure BT and STIG vs IS after shifting beam in different directions
+#
+# Use ReportComaVsISmatrix 
+#
+# to check actual values of xpx xpy ypx ypy
+#
+# Use DebugOutput 1 to get details of the image shift
+#   
+# STATUS: functional
+#
+###################################
+
+
+# BTx = ISx * xpx + ISy * xpy
+
+# BTy = ISx * ypx + ISy * ypy
+
+SetImageShift 0 0 
+
+SetProperty AstigBTBacklashDelay 2
+IS_ScailFact = 3.25 # Rough scaling factor 
+
+extent = { 8.0  } # SHIFTS IN MICRONS (approximate)
+
+echo *********************************************************************************************************************
+echo STARTING SCRIPT BTvsIS 
+echo *********************************************************************************************************************
+echo RUN COMA and ASTIGMATISM MEASUREMENTS FOR IS $extent
+echo DO STIG AND COMA CORRECTION AT IS 0
+
+#Initial alignment at  IS = 0 
+FixAstigmatismByCTF
+FixComaByCTF
+FixAstigmatismByCTF
+
+# main program 
+
+ReportImageShift xbase ybase
+ReportBeamTilt    txbase tybase
+Loop $#extent ind
+echo ************************MEASURING TILTS FOR IS  $extent[$ind] microns*************************
+
+SetImageShift  ( $xbase + $extent[$ind] * $IS_ScailFact  )  $ybase
+ScreenDown
+Delay 20 sec
+ScreenUp
+Delay 2 sec
+FixComaByCTF 1 1 0   
+ReportComaTiltNeeded xpxplus ypxplus
+SetBeamTilt ( $txbase + $xpxplus ) ( $tybase + $ypxplus )
+FixAstigmatismByCTF 1 1
+ReportStigmatorNeeded  xsxplus ysxplus    
+SetBeamTilt $txbase $tybase
+echo  IS X plus BEAM TILT IS $xpxplus $ypxplus mrad and STIG  $xsxplus $ysxplus units
+
+SetImageShift ( $xbase - $extent[$ind] * $IS_ScailFact )  $ybase
+ScreenDown
+Delay 20 sec
+Delay 2 sec
+ScreenUp
+FixComaByCTF 1 1 0
+ReportComaTiltNeeded xpxminus ypxminus
+SetBeamTilt ( $txbase + $xpxminus ) ( $tybase + $ypxminus )
+FixAstigmatismByCTF 1 1
+ReportStigmatorNeeded  xsxminus ysxminus    
+SetBeamTilt $txbase $tybase
+echo  IS X minus BEAM TILT IS $xpxminus $ypxminus mrad and STIG  $xsxminus $ysxminus units
+
+SetImageShift $xbase  ( $ybase + $extent[$ind] * $IS_ScailFact  )
+ScreenDown
+Delay 20 sec
+ScreenUp
+Delay 2 sec
+FixComaByCTF 1 1 0
+ReportComaTiltNeeded xpyplus ypyplus
+SetBeamTilt ( $txbase + $xpyplus ) ( $tybase + $ypyplus )
+FixAstigmatismByCTF 1 1
+ReportStigmatorNeeded  xsyplus ysyplus    
+SetBeamTilt $txbase $tybase
+echo  IS Y plus BEAM TILT IS $xpyplus $ypyplus mrad and STIG  $xsyplus $ysyplus units
+
+
+SetImageShift $xbase  ( $ybase - $extent[$ind] * $IS_ScailFact )
+ScreenDown
+Delay 20 sec
+ScreenUp
+Delay 2 sec
+FixComaByCTF 1 1 0
+ReportComaTiltNeeded xpyminus ypyminus
+SetBeamTilt ( $txbase + $xpyminus ) ( $tybase + $ypyminus )
+FixAstigmatismByCTF 1 1
+ReportStigmatorNeeded  xsyminus ysyminus    
+SetBeamTilt $txbase $tybase
+echo  IS Y minus BEAM TILT IS $xpyminus $ypyminus mrad and STIG  $xsyminus $ysyminus units
+
+   
+SetImageShift $xbase  $ybase
+   
+
+xpx = ($xpxplus - $xpxminus) / (2 * $extent[$ind] * $IS_ScailFact )
+xpy = ($xpyplus - $xpyminus) / (2 * $extent[$ind] * $IS_ScailFact )
+ypx = ($ypxplus - $ypxminus) / (2 * $extent[$ind] * $IS_ScailFact )   
+ypy = ($ypyplus - $ypyminus) / (2 * $extent[$ind] * $IS_ScailFact )
+   
+echo ********************** MATRISES for extent $extent[$ind]   **********************
+echo   BTvs IS matrix = $xpx $xpy  $ypx $ypy
+
+xsx = ($xsxplus - $xsxminus) / (2 * $extent[$ind] * $IS_ScailFact )
+xsy = ($xsyplus - $xsyminus) / (2 * $extent[$ind] * $IS_ScailFact )
+ysx = ($ysxplus - $ysxminus) / (2 * $extent[$ind] * $IS_ScailFact )   
+ysy = ($ysyplus - $ysyminus) / (2 * $extent[$ind] * $IS_ScailFact )
+
+echo  STIG vs IS matrix = $xsx $xsy $ysx $ysy
+
+EndLoop
+SetProperty AstigBTBacklashDelay 0
+echo *********************************************************************************************************************
+echo END SCRIPT BTvsIS 
+echo *********************************************************************************************************************
+EndMacro
