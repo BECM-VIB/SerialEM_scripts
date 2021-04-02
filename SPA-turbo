@@ -1,18 +1,20 @@
-MacroName CollectSPAturbo
+MacroName CollectSPA
 ###################################
 #
 # Script to acquire SPA data
 #
-# M.Fislage & R. Efremov Jul 2020
+# M.Fislage & R. Efremov Jan 2021
 #   
 # STATUS: functional
 #
 ###################################
 
 Call Parameters
+if $debug_tur == 0 
 SuppressReports
+endif
 
-# Check if gun to be flashed, HWDark Refrence to be made and dewars to be filled or being filled
+# Check if gun to be flashed, HWDark Reference to be made and dewars to be filled or being filled
 CallFunction MyFunctions::WaitForRefillingJ
 LongOperation FF $FlashInterval
 UpdateHWDarkRef $DarkRefInterval
@@ -37,10 +39,12 @@ endif
 
 # Realign to Item with special considerations for cryoARM beam sizes
 GoToLowDoseArea V
-# realign with accuracy of 1.5 um, trying 2 iterations to fit the stage and leave IS for the best fit
-#ForceCenterRealign # uncomment if alignmnet is poor
+# realign with accuracy of 1 um, trying 2 iterations to fit the stage and leave IS for the best fit
+ForceCenterRealign # uncomment if alignmnent is poor
 ResetClock
-RealignToNavItem 1 0 1.5 2 0
+#RealignToNavItem 1 0 1 2 0
+RealignToNavItem 1 0 1.5 1 0
+
 RelaxStage 0.025
 Delay $STAGE_STAB_TIME sec
 
@@ -87,7 +91,6 @@ if  $DoFoc == 1
       GoToLowDoseArea F
       FocusChangeLimits  -50 50
       AutoFocus 
-      # check if autofocus worked - can not retrive CCC value from Autofocus data
       ReportAutofocus
       FocusError = $reportedValue2
       ReportMeanCounts
