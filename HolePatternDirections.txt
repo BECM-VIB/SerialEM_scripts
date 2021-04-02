@@ -1,26 +1,16 @@
 MacroName HolePatternDirections
-
 ###################################
 #
-# Script to define the hole pattern for multihole SPA using the SPA turbo script
+# Script to define Vector1 and 2 for the multi hole acquisition defined in the Parameters script
 #
-# R. Efremov & M.Fislage Jul 2020
+# M.Fislage & R. Efremov Jan 2021
 #   
 # STATUS: functional
 #
 ###################################
 
-#ResetClock
-#ImageShiftByMicrons 0 5 0 0
-#ReportClock
-#echo TIME: $reportedValue1 sec.
-#ResetClock
-#ImageShiftByMicrons 0 -5 0 0
-#ReportClock
-#echo TIME: $reportedValue1 sec.
-
 GoToLowDoseArea R
-OKBox 1) Lower the screen 2) Remove CL 3) Open EF slit
+OKBox 1) Lower the screen 2) Remove CL
   
 OKBox Center stage on a hole using stage shift and/or  IS
 
