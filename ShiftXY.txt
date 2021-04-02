@@ -1,27 +1,35 @@
-MacroName ShiftXY
+MacroName CLcomp_shift_angle_alignment
 ###################################
 #
-# Script to align pivot points
+# Script very accurately align CL comp shift and CL comp angle
+# works even if the stage Gonio is not accurately at eucentricity
 #
-# R. Efremov Jan 2020
+# Remove CL aperture before running this script
+#
+# Use amp-y to adjust the shift and angle in Y only
+# Use amp-x to adjust the shift and angle in x only
+#
+# Center on a feature at high magnification. 
+# Go very high under focus i.e. -40 um
+# If the feature moves in direction of beam motion adjust CL comp shift.
+# If the feature moves perpendicular to the beam motion adjust CL comp angle. 
+#
+# M.Fislage & R. Efremov Jan 2021
 #   
 # STATUS: functional
 #
 ###################################
-
-# The script is used at eucentric height, high bright field magnification (e.g. 60k), and strong underfocus (e.g. -40 um)
-# In our hands this is more accurate than using shift wobblers in diffraction mode
-
-amp_X = 30  # use amp_x while adjusting CL comp shift X
-amp_Y = 0   # use amp_y while adjusting CL comp shift y
+amp_X = 0
+amp_Y = 40
 
 ReportBeamShift
 sh_X =  $reportedValue1
 sh_Y =  $reportedValue2
-loop 100 icount
-Delay 0.5 sec
+loop 20 icount
+Delay 1 sec
 SetBeamShift  $sh_X + $amp_X  $sh_Y + $amp_Y
-Delay 0.5 sec
+Delay 1 sec
 SetBeamShift  $sh_X - $amp_X  $sh_Y - $amp_Y
 echo $icount
  endloop
+SetBeamShift  $sh_X  $sh_Y 
