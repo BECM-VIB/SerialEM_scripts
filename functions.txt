@@ -5,7 +5,7 @@ MacroName MyFunctions
 #
 # STATUS: functional
 #
-# M.Fislage & R. Efremov Jul 2020
+# M.Fislage & R. Efremov Jan 2021
 #
 # Credits to J. Brink, Chen Xu, Hening Stahlberg, Wim Hagen and David Mastronarde
 # 
@@ -45,9 +45,7 @@ EndFunction
 
 Function CenterBeam 1
 # A function to center the beam in Trial mode
-#
 
-GoToLowDoseArea T # is it needed?
 Trial
 CenterBeamFromImage T
 if ( $argVal1 == 1)
@@ -70,7 +68,7 @@ delta = -1 * $step
 # Otherwise, increase a step of $delta
 
 ReportTargetDefocus 
-If $reportedValue1 > $TD_low OR $reportedValue1 < $TD_high
+If $reportedValue1 > $TD_low OR $reportedValue1 <= $TD_high
    SetTargetDefocus $TD_low
 Else
    IncTargetDefocus $delta
@@ -105,7 +103,6 @@ Function MultiShot
 
 Call Parameters
 
-if $shottype == 0
 IS_RAD = $offset
 ReportImageShift
 X0 = $reportedValue1
@@ -118,6 +115,15 @@ ReportObjectiveStigmator
 stig_x0 = $reportedValue1
 stig_y0 = $reportedValue2
 
+if $debug_tur == 1
+
+echo IMAGE SHIFT AT THE CENTER X0=$X0  Y0=$Y0
+echo BEAM TILT AT THE CENTER     tilt_x0=$tilt_x0 tilt_y0=$tilt_y0
+echo STIG AT THE CENTER                stig_x0=$stig_x0  stig_y0=$stig_y0
+ReportAbsoluteFocus
+echo ABS FOCUS  $reportedValue1
+
+endif
 
 loop $#hole_coord_x hcount
    loop $shots  icount  
@@ -138,21 +144,12 @@ loop $#hole_coord_x hcount
       SetImageShift  $shift_X $shift_Y 
       SetBeamTilt ( $tilt_x + $tilt_x0 ) ( $tilt_y + $tilt_y0 )
       SetObjectiveStigmator ( $stig_x + $stig_x0 )  ( $stig_y + $stig_y0 )  
-      Delay $msdelay
+      #Delay $wait_time
       #EarlyReturnNextShot $earlyold
       R  
     endloop
 endloop
-endif
 
-if $shottype == 1  
-   Delay $wait_time 
-   MultipleRecords $shots $center $offset $msdelay 0 $earlyreturn $earlyframes $multihole
-endif
-if $shottype == 2   ##uses informaition entered in serialEM panel
-   Delay $wait_time
-   MultipleRecords
-endif
 
 ReportMeanCounts
    I_FILT_IN = $reportedValue1
@@ -174,5 +171,11 @@ if  (  MODULO ( $NN $ICE_FREQ )  == 0 )
    SetSlitIn 1
    SetLowDoseMode 1
    GoToLowDoseArea R
-   endif 
+endif 
+
+SetImageShift $X0 $Y0  # it is a safety measure
+SetBeamTilt $tilt_x0 $tilt_y0  # important
+SetObjectiveStigmator  $stig_x0 $stig_y0  #important  
+Delay 1 sec
 EndFunction
+EndMacro
