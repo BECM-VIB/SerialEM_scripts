@@ -1,0 +1,129 @@
+ScriptName BTandSTIGvsISmeasure
+
+###################################
+#
+# Script to acquire SPA data
+#
+# R. Efremov & M.Fislage Jan 2021
+#
+# Script modified version of https://sphinx-emdocs.readthedocs.io/en/latest/serialEM-note-tackle-coma.html
+# The goal is to measure BT and STIG vs IS in cicular pattern with defined radius
+#   
+# STATUS: functional
+#
+###################################
+
+
+IS_RAD = {6.0 8.0 10.0} # radii for IS cirular pattern
+point_number = 16 # number of eqiuanglular points 
+SetImageShift 0 0 
+SetProperty AstigBTBacklashDelay 2
+ 
+
+
+
+echo *********************************************************************************************************************
+echo STARTING SCRIPT  BTandSTIGvsIS measure
+echo *********************************************************************************************************************
+echo RUN COMA and ASTIGMATISM MEASUREMENTS FOR RADIUS $IS_RAD and $point_number POINTS 
+echo DO STIG AND COMA CORRECTION AT IS 0
+
+#FixAstigmatismByCTF
+#FixComaByCTF
+#FixAstigmatismByCTF
+
+# main program 
+
+ReportImageShift xbase ybase
+ReportBeamTilt   txbase tybase
+
+loop $IS_RAD ind
+echo *********** MEASURE FOR RADIUS $IS_RAD[$ind] ********************
+  loop $point_number  icount  
+      IS_ANGLE = ( $icount - 1 ) * 360 / $point_number
+      IS_X = $IS_RAD[$ind] * cos ( $IS_ANGLE)
+      IS_Y = $IS_RAD[$ind] * sin ( $IS_ANGLE)
+
+ImageShiftbyMicrons $IS_X $IS_Y 0 0
+ReportImageShift IS_Xunits IS_Yunits 
+
+Delay 1 sec
+FixComaByCTF 1 1 0   
+ReportComaTiltNeeded xt yt
+SetBeamTilt ( $txbase + $xt ) ( $tybase + $yt )
+Delay 1 sec
+FixAstigmatismByCTF 1 1
+ReportStigmatorNeeded  xs ys    
+R
+SetBeamTilt $txbase $tybase
+
+echo RADIUS  $IS_RAD[$ind]    ANGLE $IS_ANGLE  IS in units  IS_X $IS_Xunits  IS_Y $IS_Yunits  BEAMTILT   $xt $yt ASTIGMATISM  $xs $ys
+
+
+
+#SetImageShift $xbase $ybase
+ImageShiftbyMicrons ( - $IS_X ) (- $IS_Y ) 0 0
+
+EndLoop
+EndLoop
+
+
+SetProperty AstigBTBacklashDelay 0
+echo *********************************************************************************************************************
+echo END SCRIPT BTandSTIGvsIS measure
+echo *********************************************************************************************************************
+EndMacro
+Macro	23
+ScriptName IR_residual_drift
+
+
+IS_RAD = {2.0 4.0} # radii for IS cirular pattern
+point_number = 16 # number of eqiuanglular points 
+SetImageShift 0 0 
+SetProperty AstigBTBacklashDelay 0
+ 
+
+
+
+echo *********************************************************************************************************************
+echo STARTING SCRIPT IR_residual_drift
+echo *********************************************************************************************************************
+echo RUN COMA and ASTIGMATISM MEASUREMENTS FOR RADIUS $IS_RAD and $point_number POINTS 
+echo DO STIG AND COMA CORRECTION AT IS 0
+
+# main program 
+
+ReportImageShift xbase ybase
+ReportBeamTilt   txbase tybase
+ReportObjectiveStigmator stig_x stig_y
+loop $IS_RAD ind
+echo *********** MEASURE FOR RADIUS $IS_RAD[$ind] ********************
+  loop $point_number  icount  
+ResetClock 
+      IS_ANGLE = ( $icount - 1 ) * 360 / $point_number
+      IS_X = $IS_RAD[$ind] * cos ( $IS_ANGLE)
+      IS_Y = $IS_RAD[$ind] * sin ( $IS_ANGLE)
+
+ImageShiftbyMicrons $IS_X $IS_Y 0 0
+SetBeamTilt ( $txbase + 1 ) ( $tybase + 1 )
+SetObjectiveStigmator ($stig_x+0.001)  ($stig_y+0.001)
+R
+ReportClock
+echo RADIUS  $IS_RAD[$ind]    ANGLE $IS_ANGLE required Time  $reportedValue1 sec
+SetBeamTilt $txbase $tybase
+SetBeamTilt $txbase $tybase
+SetObjectiveStigmator $stig_x  $stig_y
+
+
+#ResetImageShift
+ImageShiftbyMicrons ( - $IS_X ) (- $IS_Y ) 0 0
+
+EndLoop
+EndLoop
+
+
+SetProperty AstigBTBacklashDelay 0
+echo *********************************************************************************************************************
+echo END SCRIPT IR_residual_drift
+echo *********************************************************************************************************************
+EndMacro
